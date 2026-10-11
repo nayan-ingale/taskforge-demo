@@ -3,7 +3,7 @@
 import type { TaskStatus } from './enums';
 
 const TRANSITIONS: Readonly<Record<TaskStatus, readonly TaskStatus[]>> = {
-  todo: ['in_progress'],
+  todo: ['in_progress', 'done'],
   in_progress: ['in_review', 'todo'],
   in_review: ['done', 'in_progress'],
   done: ['in_progress'],
