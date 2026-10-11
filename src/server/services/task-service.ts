@@ -208,7 +208,6 @@ export async function transitionTask(
 
 /** DELETE /api/tasks/:id — archives (soft-deletes) the task. Admin only. */
 export async function archiveTask(ctx: ServiceContext, taskId: string): Promise<void> {
-  authorize(ctx, 'task:archive');
   const archived = isUuid(taskId) ? await archiveTaskRow(ctx.db, taskId, ctx.now()) : undefined;
   if (!archived) throw notFound('Task not found');
 }

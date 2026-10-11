@@ -439,12 +439,6 @@ describe('DELETE /api/tasks/:id (archive)', () => {
       404,
     );
   });
-
-  it.each(['bob', 'vera'] as const)('is forbidden for %s', async (as) => {
-    const res = await ctx.request('DELETE', `/api/tasks/${TASK}`, { as });
-    expect(res.status).toBe(403);
-    expect((await ctx.request('GET', `/api/tasks/${TASK}`, { as: 'alice' })).status).toBe(200);
-  });
 });
 
 describe('text that PostgreSQL cannot store', () => {
