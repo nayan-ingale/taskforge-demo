@@ -201,39 +201,47 @@ describe('GET /api/projects/:id/tasks — filters', () => {
   );
 });
 
-describe('GET /api/projects/:id/tasks — search', () => {
-  it('matches text that only appears in the description', async () => {
-    const res = await list('q=AVIF');
-    expect(ids(res.json.items)).toEqual([seedTaskId(16)]);
-  });
+  describe('GET /api/projects/:id/tasks — search', () => {
+    it('matches text that only appears in the description', async () => {
+      const res = await list('q=AVIF');
+      expect(ids(res.json.items)).toEqual([seedTaskId(16)]);
+    });
 
-  it('does not return archived tasks or tasks of other projects', async () => {
-    // "login" also appears in archived tasks 19 and 30 and in MOB task 24.
-    const res = await list('q=login&pageSize=50');
-    expect(ids(res.json.items)).not.toContain(seedTaskId(19));
-    expect(ids(res.json.items)).not.toContain(seedTaskId(24));
-    const mobile = await list('q=login', MOB);
-    expect(ids(mobile.json.items)).toEqual([seedTaskId(24)]);
-  });
+    it('does not return archived tasks or tasks of other projects', async () => {
+      // "login" also appears in archived tasks 19 and 30 and in MOB task 24.
+      const res = await list('q=login&pageSize=50');
+      expect(ids(res.json.items)).not.toContain(seedTaskId(19));
+      expect(ids(res.json.items)).not.toContain(seedTaskId(24));
+      const mobile = await list('q=login', MOB);
+      expect(ids(mobile.json.items)).toEqual([seedTaskId(24)]);
+    });
 
-  it('treats % and _ literally', async () => {
-    expect(ids((await list(`q=${encodeURIComponent('100%')}`)).json.items)).toEqual([
-      seedTaskId(8),
-    ]);
-    expect(ids((await list(`q=${encodeURIComponent('%')}`)).json.items)).toEqual([seedTaskId(8)]);
-    expect(ids((await list('q=_')).json.items)).toEqual([seedTaskId(9)]);
-    expect(ids((await list('q=user_id')).json.items)).toEqual([seedTaskId(9)]);
-    expect((await list(`q=${encodeURIComponent('\\')}`)).json.total).toBe(0);
-  });
+    it('finds tasks regardless of case', async () => {
+      const res = await list('q=login&pageSize=50');
+      const foundIds = ids(res.json.items);
+      expect(foundIds).toContain(seedTaskId(3)); // Login page redesign
+      expect(foundIds).toContain(seedTaskId(4)); // Password reset email template (description has LOGIN)
+      expect(foundIds).not.toContain(seedTaskId(19)); // archived
+    });
 
-  it('returns an empty page when nothing matches', async () => {
-    const res = await list('q=kubernetes');
-    expect(res.json).toMatchObject({ items: [], total: 0, totalPages: 0 });
-  });
+    it('treats % and _ literally', async () => {
+      expect(ids((await list(`q=${encodeURIComponent('100%')}`)).json.items)).toEqual([
+        seedTaskId(8),
+      ]);
+      expect(ids((await list(`q=${encodeURIComponent('%')}`)).json.items)).toEqual([seedTaskId(8)]);
+      expect(ids((await list('q=_')).json.items)).toEqual([seedTaskId(9)]);
+      expect(ids((await list('q=user_id')).json.items)).toEqual([seedTaskId(9)]);
+      expect((await list(`q=${encodeURIComponent('\\')}`)).json.total).toBe(0);
+    });
 
-  it('rejects searches longer than 200 characters', async () => {
-    const res = await list(`q=${'a'.repeat(201)}`);
-    expect(res.status).toBe(400);
-    expect(res.json.error.details.fieldErrors.q).toBeDefined();
+    it('returns an empty page when nothing matches', async () => {
+      const res = await list('q=kubernetes');
+      expect(res.json).toMatchObject({ items: [], total: 0, totalPages: 0 });
+    });
+
+    it('rejects searches longer than 200 characters', async () => {
+      const res = await list(`q=${'a'.repeat(201)}`);
+      expect(res.status).toBe(400);
+      expect(res.json.error.details.fieldErrors.q).toBeDefined();
+    });
   });
-});
