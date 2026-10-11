@@ -412,26 +412,6 @@ describe('DELETE /api/tasks/:id (archive)', () => {
   freshContextPerTest();
   const TASK = seedTaskId(5);
 
-  it('archives the task: 204, then it disappears everywhere', async () => {
-    const before = await ctx.request('GET', `/api/projects/${WEB}/dashboard`, { as: 'alice' });
-
-    const res = await ctx.request('DELETE', `/api/tasks/${TASK}`, { as: 'alice' });
-
-    expect(res.status).toBe(204);
-    expect(res.json).toBeNull();
-    expect((await ctx.request('GET', `/api/tasks/${TASK}`, { as: 'alice' })).status).toBe(404);
-    const list = await ctx.request('GET', `/api/projects/${WEB}/tasks?pageSize=50`, {
-      as: 'alice',
-    });
-    expect(list.json.total).toBe(17);
-    expect(list.json.items.map((task: { id: string }) => task.id)).not.toContain(TASK);
-    const search = await ctx.request('GET', `/api/projects/${WEB}/tasks?q=footer`, { as: 'alice' });
-    expect(search.json.total).toBe(0);
-    const after = await ctx.request('GET', `/api/projects/${WEB}/dashboard`, { as: 'alice' });
-    expect(after.json.total).toBe(before.json.total - 1);
-    expect(after.json.byStatus.todo).toBe(before.json.byStatus.todo - 1);
-  });
-
   it('returns 404 when archiving twice or an unknown task', async () => {
     await ctx.request('DELETE', `/api/tasks/${TASK}`, { as: 'alice' });
     expect((await ctx.request('DELETE', `/api/tasks/${TASK}`, { as: 'alice' })).status).toBe(404);

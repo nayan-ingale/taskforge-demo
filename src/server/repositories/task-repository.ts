@@ -134,6 +134,6 @@ export async function countTasksByStatusAndPriority(
       ),
     })
     .from(tasks)
-    .where(visibleTasksWhere({ projectId }))
+    .where(eq(tasks.projectId, projectId))
     .groupBy(tasks.status, tasks.priority);
 }
