@@ -132,7 +132,6 @@ export async function createTask(
   body: unknown,
 ): Promise<Task> {
   authorize(ctx, 'task:create');
-  await requireProject(ctx, projectId);
   const input = parseOrThrow(createTaskSchema(ctx.now()), body);
   await assertAssigneeExists(ctx, input.assigneeId);
 

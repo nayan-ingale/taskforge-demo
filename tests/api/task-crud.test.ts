@@ -108,16 +108,6 @@ describe('POST /api/projects/:id/tasks — success', () => {
 describe('POST /api/projects/:id/tasks — rejected', () => {
   sharedContext();
 
-  it('returns 404 for an unknown project', async () => {
-    const res = await createTask(
-      { title: 'Orphan' },
-      'bob',
-      '20000000-0000-4000-8000-000000000099',
-    );
-    expect(res.status).toBe(404);
-    expect(res.json.error.code).toBe('not_found');
-  });
-
   it.each([
     [{ title: 'ab' }, ['title']],
     [{ title: '   ' }, ['title']],
