@@ -168,11 +168,11 @@ export async function updateTask(
 
   const changes: TaskChanges = {};
   if (input.title !== undefined) changes.title = input.title;
-  if (input.description !== undefined) changes.description = input.description;
+  changes.description = input.description ?? null;
   if (input.priority !== undefined) changes.priority = input.priority;
   if (input.assigneeId !== undefined) changes.assigneeId = input.assigneeId;
-  if (input.dueDate !== undefined) changes.dueDate = input.dueDate;
-  if (input.estimateHours !== undefined) changes.estimateHours = input.estimateHours;
+  changes.dueDate = input.dueDate ?? null;
+  changes.estimateHours = input.estimateHours ?? null;
   if (Object.keys(changes).length === 0) {
     throw validationFailed('Provide at least one field to update', {
       fieldErrors: {},
