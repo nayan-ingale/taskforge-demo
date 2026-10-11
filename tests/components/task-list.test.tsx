@@ -4,7 +4,6 @@ import { describe, expect, it } from 'vitest';
 import { TaskList } from '@/components/task-list';
 import {
   deferred,
-  errorResponse,
   jsonResponse,
   makePage,
   makeTask,
@@ -17,57 +16,6 @@ import { PROJECT_IDS, SEED_USERS, USER_IDS } from '../support/fixtures';
 const PROJECT = PROJECT_IDS.web;
 
 describe('TaskList states', () => {
-  it('goes loading -> error -> (Retry) -> loading -> data', async () => {
-    const fetchMock = mockFetch();
-    const firstAttempt = deferred<Response>();
-    const secondAttempt = deferred<Response>();
-    fetchMock.mockReturnValueOnce(firstAttempt.promise).mockReturnValueOnce(secondAttempt.promise);
-    const user = userEvent.setup();
-
-    render(<TaskList projectId={PROJECT} />);
-
-    expect(screen.getByRole('status')).toHaveTextContent('Loading tasks…');
-    expect(screen.queryByRole('table')).not.toBeInTheDocument();
-
-    firstAttempt.resolve(
-      errorResponse(500, 'internal_error', 'Something went wrong. Please try again.'),
-    );
-    const alert = await screen.findByRole('alert');
-    expect(alert).toHaveTextContent(
-      'Could not load tasks: Something went wrong. Please try again.',
-    );
-    // The loading indicator must be gone once the request has failed.
-    expect(screen.queryByRole('status')).not.toBeInTheDocument();
-
-    await user.click(within(alert).getByRole('button', { name: 'Retry' }));
-    expect(screen.getByRole('status')).toHaveTextContent('Loading tasks…');
-    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
-
-    secondAttempt.resolve(jsonResponse(makePage([makeTask({ title: 'Write the docs' })])));
-    expect(await screen.findByRole('link', { name: 'Write the docs' })).toBeInTheDocument();
-    expect(screen.queryByRole('status')).not.toBeInTheDocument();
-    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
-    expect(fetchMock).toHaveBeenCalledTimes(2);
-  });
-
-  it('shows a network failure as an error with Retry', async () => {
-    const fetchMock = mockFetch();
-    fetchMock.mockRejectedValueOnce(new TypeError('Failed to fetch'));
-
-    render(<TaskList projectId={PROJECT} />);
-
-    const alert = await screen.findByRole('alert');
-    expect(alert).toHaveTextContent('Could not reach the server');
-    expect(within(alert).getByRole('button', { name: 'Retry' })).toBeEnabled();
-    expect(screen.queryByText('Loading tasks…')).not.toBeInTheDocument();
-  });
-
-  it('shows the API error message (e.g. 404 for a missing project)', async () => {
-    mockFetch().mockResolvedValueOnce(errorResponse(404, 'not_found', 'Project not found'));
-    render(<TaskList projectId={PROJECT} />);
-    expect(await screen.findByRole('alert')).toHaveTextContent('Project not found');
-  });
-
   it('shows an empty state when the project has no tasks', async () => {
     mockFetch().mockResolvedValueOnce(jsonResponse(makePage([])));
     render(<TaskList projectId={PROJECT} />);

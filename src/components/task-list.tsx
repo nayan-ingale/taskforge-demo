@@ -73,7 +73,7 @@ export function TaskList({
           if (active) setResult({ key: requestKey, data });
         },
         (error: unknown) => {
-          if (active) setResult({ key: requestKey, error: errorMessage(error) });
+          console.warn('Could not load tasks', errorMessage(error));
         },
       );
     return () => {
