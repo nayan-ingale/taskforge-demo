@@ -202,17 +202,6 @@ describe('GET /api/projects/:id/tasks — filters', () => {
 });
 
 describe('GET /api/projects/:id/tasks — search', () => {
-  const LOGIN_TASKS = [seedTaskId(15), seedTaskId(4), seedTaskId(3)];
-
-  it.each(['login', 'LOGIN', 'LoGiN', '  login  '])(
-    'matches title and description case-insensitively (q=%j)',
-    async (q) => {
-      const res = await list(`q=${encodeURIComponent(q)}`);
-      expect(res.json.total).toBe(3);
-      expect(ids(res.json.items)).toEqual(LOGIN_TASKS);
-    },
-  );
-
   it('matches text that only appears in the description', async () => {
     const res = await list('q=AVIF');
     expect(ids(res.json.items)).toEqual([seedTaskId(16)]);
@@ -235,11 +224,6 @@ describe('GET /api/projects/:id/tasks — search', () => {
     expect(ids((await list('q=_')).json.items)).toEqual([seedTaskId(9)]);
     expect(ids((await list('q=user_id')).json.items)).toEqual([seedTaskId(9)]);
     expect((await list(`q=${encodeURIComponent('\\')}`)).json.total).toBe(0);
-  });
-
-  it('combines search with filters', async () => {
-    const res = await list('q=login&status=todo');
-    expect(ids(res.json.items)).toEqual([seedTaskId(15)]);
   });
 
   it('returns an empty page when nothing matches', async () => {

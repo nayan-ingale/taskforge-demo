@@ -28,8 +28,8 @@ export function visibleTasksWhere(filter: TaskFilter): SQL {
   if (filter.q) {
     const pattern = `%${escapeLikePattern(filter.q)}%`;
     const search = or(
-      sql`${tasks.title} ILIKE ${pattern} ESCAPE '\\'`,
-      sql`${tasks.description} ILIKE ${pattern} ESCAPE '\\'`,
+      sql`${tasks.title} LIKE ${pattern} ESCAPE '\\'`,
+      sql`${tasks.description} LIKE ${pattern} ESCAPE '\\'`,
     );
     if (search) conditions.push(search);
   }
