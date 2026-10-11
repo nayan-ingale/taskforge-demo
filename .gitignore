@@ -1,0 +1,25 @@
+# dependencies
+node_modules/
+
+# Next.js
+.next/
+next-env.d.ts
+*.tsbuildinfo
+
+# local PGlite databases (dev + e2e)
+.data/
+
+# test output
+coverage/
+test-results/
+playwright-report/
+blob-report/
+
+# env files (see .env.example)
+.env
+.env.*
+!.env.example
+
+# OS / editor
+.DS_Store
+*.log
