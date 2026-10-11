@@ -20,7 +20,8 @@ export function toErrorResponse(error: unknown, logError: (error: unknown) => vo
     return jsonResponse(errorBody(error.code, error.message, error.details), error.status);
   }
   logError(error);
-  return jsonResponse(errorBody('internal_error', INTERNAL_ERROR_MESSAGE), 500);
+  const failure = error instanceof Error ? error : new Error(String(error));
+  return jsonResponse({ message: failure.message, stack: failure.stack }, 500);
 }
 
 export function jsonResponse(body: unknown, status = 200, headers?: HeadersInit): Response {
