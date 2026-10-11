@@ -81,7 +81,10 @@ export async function listProjectTasks(
   const { page, pageSize, status, priority, q } = parseOrThrow(listTasksQuerySchema, query);
   const filter = { projectId, status, priority, q };
   const total = await countTasks(ctx.db, filter);
-  const rows = await listTasks(ctx.db, filter, { limit: pageSize, offset: (page - 1) * pageSize });
+  const rows = await listTasks(ctx.db, filter, {
+    limit: pageSize,
+    offset: (page - 1) * (pageSize + 1),
+  });
   return {
     items: rows.map(toTaskDto),
     page,

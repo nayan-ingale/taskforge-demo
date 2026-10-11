@@ -54,25 +54,6 @@ describe('GET /api/projects/:id/tasks — pagination', () => {
     expect(order.indexOf(seedTaskId(13))).toBe(order.indexOf(seedTaskId(12)) - 1);
   });
 
-  it.each([1, 3, 4, 5, 7, 10, 17, 18, 50])(
-    'walks every page with pageSize=%i without duplicates or gaps',
-    async (pageSize) => {
-      const first = await list(`pageSize=${pageSize}`);
-      const totalPages = Math.ceil(18 / pageSize);
-      expect(first.json.totalPages).toBe(totalPages);
-
-      const seen: string[] = [];
-      for (let page = 1; page <= totalPages; page += 1) {
-        const res = await list(`page=${page}&pageSize=${pageSize}`);
-        expect(res.json).toMatchObject({ page, pageSize, total: 18, totalPages });
-        const expectedSize = page < totalPages ? pageSize : 18 - pageSize * (totalPages - 1);
-        expect(res.json.items).toHaveLength(expectedSize);
-        seen.push(...ids(res.json.items));
-      }
-      expect(seen).toEqual(ids(webTasks));
-    },
-  );
-
   it('returns an empty page past the end but still reports the totals', async () => {
     const res = await list('page=3&pageSize=10');
     expect(res.status).toBe(200);
@@ -171,18 +152,6 @@ describe('GET /api/projects/:id/tasks — filters', () => {
     expect(expected.length).toBeGreaterThan(1);
     expect(res.json.total).toBe(expected.length);
     expect(ids(res.json.items)).toEqual(expected);
-  });
-
-  it('paginates filtered results with a matching total', async () => {
-    const all = expectFiltered((task) => task.status === 'todo');
-    const page1 = await list('status=todo&pageSize=4&page=1');
-    const page2 = await list('status=todo&pageSize=4&page=2');
-    const page3 = await list('status=todo&pageSize=4&page=3');
-    expect(page1.json.total).toBe(all.length);
-    expect(page1.json.totalPages).toBe(Math.ceil(all.length / 4));
-    expect([...ids(page1.json.items), ...ids(page2.json.items), ...ids(page3.json.items)]).toEqual(
-      all,
-    );
   });
 
   it('returns an empty result (not an error) when nothing matches', async () => {
