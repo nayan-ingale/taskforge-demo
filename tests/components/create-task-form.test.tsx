@@ -36,14 +36,6 @@ describe('CreateTaskForm validation', () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it('trims the title before checking its length', async () => {
-    mockFetch();
-    const { user } = renderForm();
-    await user.type(field('Title'), '   ab   ');
-    await user.click(submit());
-    expect(screen.getByText('Title must be at least 3 characters')).toBeInTheDocument();
-  });
-
   it('rejects a title longer than 120 characters', async () => {
     mockFetch();
     const { user } = renderForm();

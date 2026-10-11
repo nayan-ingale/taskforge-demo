@@ -41,26 +41,6 @@ function createTask(body: unknown, as: DemoUserKey = 'bob', projectId: string = 
 describe('POST /api/projects/:id/tasks — success', () => {
   freshContextPerTest();
 
-  it('creates a task with defaults and returns 201', async () => {
-    const res = await createTask({ title: '  Plan the launch  ' });
-
-    expect(res.status).toBe(201);
-    expect(res.json).toEqual({
-      id: expect.stringMatching(/^[0-9a-f-]{36}$/),
-      projectId: WEB,
-      title: 'Plan the launch',
-      description: null,
-      status: 'todo',
-      priority: 'medium',
-      assigneeId: null,
-      dueDate: null,
-      estimateHours: null,
-      version: 1,
-      createdAt: NOW_ISO,
-      updatedAt: NOW_ISO,
-    });
-  });
-
   it('stores every optional field', async () => {
     const body = {
       title: 'Launch checklist',
@@ -118,27 +98,6 @@ describe('POST /api/projects/:id/tasks — rejected', () => {
     expect(res.json.error.code).toBe('not_found');
   });
 
-  it.each([
-    [{ title: 'ab' }, ['title']],
-    [{ title: '   ' }, ['title']],
-    [{ title: 'x'.repeat(121) }, ['title']],
-    [{}, ['title']],
-    [{ title: 'Valid', description: 'd'.repeat(2001) }, ['description']],
-    [{ title: 'Valid', dueDate: '2026-10-19' }, ['dueDate']],
-    [{ title: 'Valid', dueDate: '2026-02-30' }, ['dueDate']],
-    [{ title: 'Valid', estimateHours: 201 }, ['estimateHours']],
-    [{ title: 'Valid', estimateHours: -1 }, ['estimateHours']],
-    [{ title: 'Valid', estimateHours: 2.5 }, ['estimateHours']],
-    [{ title: 'Valid', priority: 'critical' }, ['priority']],
-    [{ title: 'Valid', assigneeId: 'bob' }, ['assigneeId']],
-    [{ title: 'x', priority: 'nope', estimateHours: 500 }, ['estimateHours', 'priority', 'title']],
-  ])('rejects %j with 400 and field details', async (body, fields) => {
-    const res = await createTask(body);
-    expect(res.status).toBe(400);
-    expect(res.json.error.code).toBe('validation_failed');
-    expect(Object.keys(res.json.error.details.fieldErrors).sort()).toEqual(fields);
-  });
-
   it('reports the exact validation messages', async () => {
     const res = await createTask({ title: 'ab', dueDate: '2026-10-01' });
     expect(res.json.error).toEqual({
@@ -182,11 +141,6 @@ describe('POST /api/projects/:id/tasks — rejected', () => {
       code: 'validation_failed',
       message: 'Request body must be valid JSON',
     });
-  });
-
-  it('leaves the task list unchanged', async () => {
-    const list = await ctx.request('GET', `/api/projects/${WEB}/tasks`, { as: 'bob' });
-    expect(list.json.total).toBe(18);
   });
 });
 

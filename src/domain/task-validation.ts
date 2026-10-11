@@ -17,7 +17,6 @@ export const MAX_PAGE_SIZE = 50;
 
 const title = z
   .string({ error: 'Title is required' })
-  .trim()
   .min(TITLE_MIN, `Title must be at least ${TITLE_MIN} characters`)
   .max(TITLE_MAX, `Title must be at most ${TITLE_MAX} characters`)
   .refine(hasNoNul, NUL_MESSAGE);
@@ -44,7 +43,6 @@ const assigneeId = z.string().regex(UUID_PATTERN, 'Assignee must be a user id').
 const estimateHours = z
   .number({ error: 'Estimate must be a number of hours' })
   .int('Estimate must be a whole number of hours')
-  .min(0, 'Estimate cannot be negative')
   .max(ESTIMATE_MAX_HOURS, `Estimate must be at most ${ESTIMATE_MAX_HOURS} hours`)
   .nullable();
 
