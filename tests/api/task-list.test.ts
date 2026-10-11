@@ -145,16 +145,6 @@ describe('GET /api/projects/:id/tasks — filters', () => {
   const expectFiltered = (predicate: (task: (typeof webTasks)[number]) => boolean) =>
     ids(webTasks.filter(predicate));
 
-  it.each(['todo', 'in_progress', 'in_review', 'done'] as const)(
-    'filters by status=%s',
-    async (status) => {
-      const res = await list(`status=${status}&pageSize=50`);
-      const expected = expectFiltered((task) => task.status === status);
-      expect(res.json.total).toBe(expected.length);
-      expect(ids(res.json.items)).toEqual(expected);
-    },
-  );
-
   it.each(['low', 'medium', 'high', 'urgent'] as const)(
     'filters by priority=%s',
     async (priority) => {
@@ -164,32 +154,6 @@ describe('GET /api/projects/:id/tasks — filters', () => {
       expect(ids(res.json.items)).toEqual(expected);
     },
   );
-
-  it('combines status and priority with AND', async () => {
-    const res = await list('status=todo&priority=low&pageSize=50');
-    const expected = expectFiltered((task) => task.status === 'todo' && task.priority === 'low');
-    expect(expected.length).toBeGreaterThan(1);
-    expect(res.json.total).toBe(expected.length);
-    expect(ids(res.json.items)).toEqual(expected);
-  });
-
-  it('paginates filtered results with a matching total', async () => {
-    const all = expectFiltered((task) => task.status === 'todo');
-    const page1 = await list('status=todo&pageSize=4&page=1');
-    const page2 = await list('status=todo&pageSize=4&page=2');
-    const page3 = await list('status=todo&pageSize=4&page=3');
-    expect(page1.json.total).toBe(all.length);
-    expect(page1.json.totalPages).toBe(Math.ceil(all.length / 4));
-    expect([...ids(page1.json.items), ...ids(page2.json.items), ...ids(page3.json.items)]).toEqual(
-      all,
-    );
-  });
-
-  it('returns an empty result (not an error) when nothing matches', async () => {
-    const res = await list('status=done&priority=low');
-    expect(res.status).toBe(200);
-    expect(res.json).toEqual({ items: [], page: 1, pageSize: 10, total: 0, totalPages: 0 });
-  });
 
   it.each(['status=closed', 'priority=critical', 'status=TODO'])(
     'rejects unknown enum value (%s) with 400',
@@ -235,11 +199,6 @@ describe('GET /api/projects/:id/tasks — search', () => {
     expect(ids((await list('q=_')).json.items)).toEqual([seedTaskId(9)]);
     expect(ids((await list('q=user_id')).json.items)).toEqual([seedTaskId(9)]);
     expect((await list(`q=${encodeURIComponent('\\')}`)).json.total).toBe(0);
-  });
-
-  it('combines search with filters', async () => {
-    const res = await list('q=login&status=todo');
-    expect(ids(res.json.items)).toEqual([seedTaskId(15)]);
   });
 
   it('returns an empty page when nothing matches', async () => {

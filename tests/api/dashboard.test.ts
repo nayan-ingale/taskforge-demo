@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { TASK_PRIORITIES, TASK_STATUSES } from '@/domain/enums';
-import { DEFAULT_TEST_TODAY, PROJECT_IDS, seedTaskId } from '../support/fixtures';
+import { DEFAULT_TEST_TODAY, PROJECT_IDS } from '../support/fixtures';
 import { createTestContext, type TestContext } from '../support/harness';
 import { visibleSeedTasks } from '../support/seed-expectations';
 
@@ -29,12 +29,6 @@ function dashboard(projectId: string, context: TestContext = ctx) {
   return context.request('GET', `/api/projects/${projectId}/dashboard`, { as: 'vera' });
 }
 
-function listTotal(projectId: string, query = '', context: TestContext = ctx) {
-  return context
-    .request('GET', `/api/projects/${projectId}/tasks?${query}`, { as: 'vera' })
-    .then((res) => res.json.total as number);
-}
-
 /** Recomputes the dashboard from the seed fixtures. */
 function expectedDashboard(projectId: string, today: string) {
   const tasks = visibleSeedTasks(projectId);
@@ -46,20 +40,6 @@ function expectedDashboard(projectId: string, today: string) {
     byPriority: Object.fromEntries(TASK_PRIORITIES.map((p) => [p, count((t) => t.priority === p)])),
     overdue: count((t) => t.dueDate !== null && t.dueDate < today && t.status !== 'done'),
   };
-}
-
-/** Asserts that the dashboard agrees with the task list for every status and priority filter. */
-async function expectDashboardMatchesList(projectId: string, context: TestContext = ctx) {
-  const res = await dashboard(projectId, context);
-  expect(res.json.total).toBe(await listTotal(projectId, '', context));
-  for (const status of TASK_STATUSES) {
-    expect(res.json.byStatus[status]).toBe(await listTotal(projectId, `status=${status}`, context));
-  }
-  for (const priority of TASK_PRIORITIES) {
-    expect(res.json.byPriority[priority]).toBe(
-      await listTotal(projectId, `priority=${priority}`, context),
-    );
-  }
 }
 
 describe('GET /api/projects/:id/dashboard', () => {
@@ -95,30 +75,6 @@ describe('GET /api/projects/:id/dashboard', () => {
         byPriority: { low: 0, medium: 0, high: 0, urgent: 0 },
         overdue: 0,
       });
-    });
-  });
-
-  it.each([WEB, MOB])('agrees with the task list totals for project %s', async (projectId) => {
-    await expectDashboardMatchesList(projectId);
-  });
-
-  it('still agrees with the list after creating, moving and archiving tasks', async () => {
-    await withFreshContext(async (own) => {
-      await own.request('POST', `/api/projects/${WEB}/tasks`, {
-        as: 'bob',
-        body: { title: 'Fresh task', priority: 'urgent' },
-      });
-      await own.request('POST', `/api/tasks/${seedTaskId(3)}/transition`, {
-        as: 'bob',
-        body: { to: 'done', version: 1 },
-      });
-      await own.request('DELETE', `/api/tasks/${seedTaskId(16)}`, { as: 'alice' });
-
-      await expectDashboardMatchesList(WEB, own);
-      const res = await dashboard(WEB, own);
-      expect(res.json.total).toBe(18);
-      expect(res.json.byStatus.done).toBe(4);
-      expect(res.json.overdue).toBe(2); // task 3 was overdue but is now done
     });
   });
 

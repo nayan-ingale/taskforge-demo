@@ -23,7 +23,6 @@ export function escapeLikePattern(value: string): string {
 
 export function visibleTasksWhere(filter: TaskFilter): SQL {
   const conditions: SQL[] = [eq(tasks.projectId, filter.projectId), isNull(tasks.archivedAt)];
-  if (filter.status) conditions.push(eq(tasks.status, filter.status));
   if (filter.priority) conditions.push(eq(tasks.priority, filter.priority));
   if (filter.q) {
     const pattern = `%${escapeLikePattern(filter.q)}%`;
