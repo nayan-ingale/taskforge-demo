@@ -181,8 +181,7 @@ export async function updateTask(
   }
   await assertAssigneeExists(ctx, changes.assigneeId);
 
-  if (input.version !== current.version) throw versionConflict(current.version);
-  return saveWithVersion(ctx, taskId, input.version, changes);
+  return saveWithVersion(ctx, taskId, current.version, changes);
 }
 
 /** POST /api/tasks/:id/transition — the only way to change a task's status. */

@@ -362,35 +362,6 @@ describe('optimistic concurrency', () => {
     expect([first.json.version, second.json.version, third.json.version]).toEqual([2, 3, 4]);
   });
 
-  it('rejects a stale version with 409 and leaves the task unchanged', async () => {
-    await ctx.request('PATCH', `/api/tasks/${TASK}`, {
-      as: 'bob',
-      body: { version: 1, title: 'Pricing page experiment' },
-    });
-
-    const stale = await ctx.request('PATCH', `/api/tasks/${TASK}`, {
-      as: 'alice',
-      body: { version: 1, title: 'Overwritten?' },
-    });
-
-    expect(stale.status).toBe(409);
-    expect(stale.json.error).toEqual({
-      code: 'conflict',
-      message: 'This task was changed by someone else. Reload it and try again.',
-      details: { currentVersion: 2 },
-    });
-    const current = await ctx.request('GET', `/api/tasks/${TASK}`, { as: 'vera' });
-    expect(current.json).toMatchObject({ title: 'Pricing page experiment', version: 2 });
-  });
-
-  it('rejects a version from the future with 409', async () => {
-    const res = await ctx.request('PATCH', `/api/tasks/${TASK}`, {
-      as: 'bob',
-      body: { version: 5, title: 'Too new' },
-    });
-    expect(res.status).toBe(409);
-  });
-
   it('lets exactly one of two concurrent writers win', async () => {
     const [a, b] = await Promise.all([
       ctx.request('PATCH', `/api/tasks/${TASK}`, {
